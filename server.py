@@ -1,6 +1,7 @@
 """
 Visdemo Fusion MCP Server
-A FastMCP server exposing Oracle Fusion Cloud REST API endpoints as MCP tools.
+A FastMCP server exposing Oracle Fusion Cloud REST API endpoints as MCP tools,
+plus (optionally) direct JDBC/SQL access to an Oracle database.
 
 Connection details are read from environment variables (see .env.example).
 Never hardcode credentials in this file or commit them to git.
@@ -23,6 +24,15 @@ MAX_ROWS = int(os.environ.get("FUSION_MAX_ROWS", "100"))
 
 API = "/fscmRestApi/resources/11.13.18.05"
 
+# --- Optional direct DB (JDBC-equivalent, via python-oracledb) ---------------
+# Only used by run_sql(). Requires DB_HOST/DB_PORT/DB_SERVICE_NAME/DB_USER/DB_PASSWORD
+# in .env — these are a SEPARATE Oracle DB connection, not the Fusion REST creds above.
+DB_HOST = os.environ.get("DB_HOST")
+DB_PORT = os.environ.get("DB_PORT", "1521")
+DB_SERVICE_NAME = os.environ.get("DB_SERVICE_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
 
 def _auth_header() -> dict:
     token = base64.b64encode(f"{USER}:{PASSWORD}".encode()).decode()
@@ -31,6 +41,9 @@ def _auth_header() -> dict:
 
 async def _get(path: str, **params) -> dict:
     params.setdefault("limit", MAX_ROWS)
+    # Fusion's REST API returns 400 Bad Request if q (or other finder params) is
+    # present but empty, so drop any blank params instead of sending them as "".
+    params = {k: v for k, v in params.items() if v not in ("", None)}
     async with httpx.AsyncClient(timeout=30, verify=True) as client:
         resp = await client.get(f"{BASE}{path}", headers=_auth_header(), params=params)
         resp.raise_for_status()
@@ -69,6 +82,41 @@ async def get_project_costs(project_number: str = "", limit: int = 25) -> dict:
     """Look up project costs (PPM), optionally filtered by project number."""
     q = f"ProjectNumber='{project_number}'" if project_number else ""
     return await _get(f"{API}/projectCosts", q=q, limit=limit)
+
+
+@mcp.tool()
+def run_sql(query: str, max_rows: int = 100) -> dict:
+    """
+    Run a read-only SQL query directly against the Oracle DB via python-oracledb.
+
+    Requires DB_HOST, DB_SERVICE_NAME, DB_USER, DB_PASSWORD in .env (separate from
+    the FUSION_* REST credentials). Only SELECT statements are allowed.
+    """
+    if not all([DB_HOST, DB_SERVICE_NAME, DB_USER, DB_PASSWORD]):
+        return {
+            "error": "Missing DB connection env vars. Set DB_HOST, DB_PORT, "
+                     "DB_SERVICE_NAME, DB_USER, DB_PASSWORD in .env."
+        }
+
+    stripped = query.strip().rstrip(";")
+    if not stripped.lower().startswith("select"):
+        return {"error": "Only SELECT statements are allowed via run_sql."}
+
+    try:
+        import oracledb
+    except ImportError:
+        return {"error": "python-oracledb is not installed. Run: pip install oracledb"}
+
+    dsn = f"{DB_HOST}:{DB_PORT}/{DB_SERVICE_NAME}"
+    try:
+        with oracledb.connect(user=DB_USER, password=DB_PASSWORD, dsn=dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute(stripped)
+                cols = [d[0] for d in cur.description]
+                rows = cur.fetchmany(max_rows)
+                return {"columns": cols, "rows": [list(r) for r in rows], "row_count": len(rows)}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def main() -> None:
