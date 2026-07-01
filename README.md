@@ -1,7 +1,7 @@
 # visdemo-fusion-mcp
 
 MCP server that connects Claude Desktop to the **Visdemo** Oracle Fusion Cloud instance
-(`https://fa-etaj-saasfademo1.ds-fa.oraclepdemos.com/`) via Basic Auth, exposing suppliers,
+(`https://dabpqy.ds-fa.oraclepdemos.com/`) via Basic Auth, exposing suppliers,
 purchase orders, invoices, and project costs as callable tools.
 
 ## ⚠️ Security notes (read first)
@@ -36,7 +36,7 @@ python test_connection.py
 Expected output on success:
 
 ```
-Testing connection to https://fa-etaj-saasfademo1.ds-fa.oraclepdemos.com as PPM_IMPL ...
+Testing connection to https://dabpqy.ds-fa.oraclepdemos.com as PPM_IMPL ...
 [OK] Authenticated successfully.
 ```
 
@@ -88,7 +88,7 @@ Edit your Claude Desktop config (`claude_desktop_config.json`) and add an entry.
       "command": "uv",
       "args": ["--directory", "/absolute/path/to/visdemo-fusion-mcp", "run", "python", "server.py"],
       "env": {
-        "FUSION_BASE_URL": "https://fa-etaj-saasfademo1.ds-fa.oraclepdemos.com",
+        "FUSION_BASE_URL": "https://dabpqy.ds-fa.oraclepdemos.com",
         "FUSION_USER": "PPM_IMPL",
         "FUSION_PASSWORD": "REPLACE_WITH_REAL_PASSWORD",
         "FUSION_MAX_ROWS": "100",
@@ -109,7 +109,7 @@ See `claude_desktop_config.example.json` for a copy of this.
       "command": "uvx",
       "args": ["--from", "git+https://github.com/yedla26/visdemo-fusion-mcp", "visdemo-fusion-mcp"],
       "env": {
-        "FUSION_BASE_URL": "https://fa-etaj-saasfademo1.ds-fa.oraclepdemos.com",
+        "FUSION_BASE_URL": "https://dabpqy.ds-fa.oraclepdemos.com",
         "FUSION_USER": "PPM_IMPL",
         "FUSION_PASSWORD": "REPLACE_WITH_REAL_PASSWORD",
         "FUSION_MAX_ROWS": "100",

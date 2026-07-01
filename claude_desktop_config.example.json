@@ -4,7 +4,7 @@
       "command": "uv",
       "args": ["--directory", "/absolute/path/to/oracle-fusion-mcp-visdemo", "run", "python", "server.py"],
       "env": {
-        "FUSION_BASE_URL": "https://fa-etaj-saasfademo1.ds-fa.oraclepdemos.com",
+        "FUSION_BASE_URL": "https://dabpqy.ds-fa.oraclepdemos.com",
         "FUSION_USER": "PPM_IMPL",
         "FUSION_PASSWORD": "REPLACE_WITH_REAL_PASSWORD",
         "FUSION_MAX_ROWS": "100",
