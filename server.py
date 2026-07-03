@@ -17,9 +17,9 @@ load_dotenv()
 
 mcp = FastMCP("visdemo-fusion")
 
-BASE = os.environ["FUSION_BASE_URL"].rstrip("/")
-USER = os.environ["FUSION_USER"]
-PASSWORD = os.environ["FUSION_PASSWORD"]
+BASE = os.environ["https://epop-dev11.fa.ocs.oraclecloud.com"].rstrip("/")
+USER = os.environ["Prabhanand.Yedla@ibm.com"]
+PASSWORD = os.environ["Apsdev11@123"]
 MAX_ROWS = int(os.environ.get("FUSION_MAX_ROWS", "100"))
 
 API = "/fscmRestApi/resources/11.13.18.05"
